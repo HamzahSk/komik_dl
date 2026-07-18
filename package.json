@@ -1,0 +1,16 @@
+{
+  "name": "manga-scraper-compressor",
+  "version": "1.0.0",
+  "description": "Scraper manga dengan kompresi otomatis ke format CBZ",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0-rc.12",
+    "sharp": "^0.33.4"
+  }
+}

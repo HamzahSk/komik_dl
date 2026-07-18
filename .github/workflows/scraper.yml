@@ -1,0 +1,44 @@
+name: Manga Scraper & Compressor
+
+on:
+  push:
+    paths:
+      - 'config.js'
+      - 'main.js'
+      - 'scraper.js'
+  workflow_dispatch:
+    # Memungkinkan kamu menjalankan workflow ini secara manual dari tab Actions di GitHub Web
+
+jobs:
+  scrape-and-compress:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout kode dari repositori kamu
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Setup environment Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Install dependencies
+      - name: Install Dependencies
+        run: npm ci
+
+      # 4. Jalankan script scraper utama
+      - name: Run Scraper
+        run: npm start
+
+      # 5. Upload hasil folder manga_downloads (file .cbz) ke GitHub Artifacts
+      - name: Upload CBZ Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: manga-cbz-packages
+          # Menyesuaikan dengan target folder download kamu
+          path: manga_downloads/
+          # File zip artifact akan disimpan selama 7 hari sebelum dihapus otomatis oleh GitHub
+          retention-days: 7
