@@ -11,10 +11,11 @@ export const config = {
   
   // Daftar URL target (Bisa diisi salah satu atau keduanya)
   chapterUrls: [
-    "https://cgbum.com/baca/someone-like-youcgbum/chapter/1" 
+    //"https://cgbum.com/baca/someone-like-youcgbum/chapter/1" 
     // 'https://bbato.com/read/slug/chapter_slug'
   ], 
   mangaUrls: [
+    "https://cgbum.com/komik/gimme-some-lovecgbum"
     // 'https://vymanga.com/manga/slug-manga'
   ]
 };

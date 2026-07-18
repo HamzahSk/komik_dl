@@ -35,7 +35,7 @@ async function processSingleChapter(chapterUrl, imageQuality, outputFormat) {
 
 async function main() {
   // PENGATURAN KOMPRESI DI SINI
-  const imageQuality = 70;     // Kualitas gambar (1-100)
+  const imageQuality = 80;     // Kualitas gambar (1-100)
   const outputFormat = 'webp';  // Format target ('jpeg', 'png', 'webp' -> disarankan webp agar ukuran cbz jauh lebih kecil)
 
   console.log('--- Memulai Proses Scraper & Kompresi Gambar ke CBZ ---');
