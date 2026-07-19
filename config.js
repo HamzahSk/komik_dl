@@ -15,7 +15,7 @@ export const config = {
     // 'https://bbato.com/read/slug/chapter_slug'
   ], 
   mangaUrls: [
-    "https://cgbum.com/komik/gimme-some-lovecgbum"
+    "https://cgbum.com/komik/someone-like-youcgbum"
     // 'https://vymanga.com/manga/slug-manga'
   ]
 };
