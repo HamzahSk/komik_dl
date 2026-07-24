@@ -1,0 +1,122 @@
+name: Manga Scraper & Compressor Split
+
+on:
+  push:
+    paths:
+      - 'config.js'
+      - 'main.js'
+      - 'scraper.js'
+  workflow_dispatch:
+
+jobs:
+  scrape-and-compress:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout kode dari repositori kamu
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Setup environment Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Install dependencies
+      - name: Install Dependencies
+        run: npm ci
+
+      # 4. Jalankan script scraper utama
+      - name: Run Scraper
+        run: npm start
+
+      # 5. Install package tambahan untuk membagi Artifact
+      - name: Install Artifact Toolkit
+        run: npm install @actions/artifact
+
+      # 6. Jalankan script pembagi menggunakan GitHub Script agar dapat akses Token
+      - name: Split and Upload CBZ Artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { DefaultArtifactClient } = require('@actions/artifact');
+
+            // Menggunakan workspace environment agar folder tepat sasaran
+            const DOWNLOAD_DIR = path.join(process.env.GITHUB_WORKSPACE, 'manga_downloads');
+            const MAX_SIZE_BYTES = 50 * 1024 * 1024; // Batas 50 MB
+
+            function getAllFilesRecursive(dirPath, arrayOfFiles = []) {
+              if (!fs.existsSync(dirPath)) return arrayOfFiles;
+              const files = fs.readdirSync(dirPath);
+
+              files.forEach(file => {
+                const fullPath = path.join(dirPath, file);
+                if (fs.statSync(fullPath).isDirectory()) {
+                  arrayOfFiles = getAllFilesRecursive(fullPath, arrayOfFiles);
+                } else {
+                  arrayOfFiles.push(fullPath);
+                }
+              });
+              return arrayOfFiles;
+            }
+
+            const allFiles = getAllFilesRecursive(DOWNLOAD_DIR);
+            const files = allFiles
+              .filter(filePath => filePath.endsWith('.cbz'))
+              .map(filePath => {
+                const stats = fs.statSync(filePath);
+                return {
+                  name: path.basename(filePath),
+                  path: filePath,
+                  size: stats.size,
+                  mtime: stats.mtimeMs
+                };
+              });
+
+            if (files.length === 0) {
+              console.log('Tidak ada file .cbz untuk di-upload.');
+              return;
+            }
+
+            files.sort((a, b) => a.mtime - b.mtime);
+
+            const batches = [];
+            let currentBatch = [];
+            let currentSize = 0;
+
+            for (const file of files) {
+              if (currentBatch.length > 0 && (currentSize + file.size > MAX_SIZE_BYTES)) {
+                batches.push(currentBatch);
+                currentBatch = [];
+                currentSize = 0;
+              }
+              currentBatch.push(file);
+              currentSize += file.size;
+            }
+            if (currentBatch.length > 0) batches.push(currentBatch);
+
+            console.log(`Total file .cbz: ${files.length}. Akan dibagi ke ${batches.length} artifact.`);
+
+            const artifactClient = new DefaultArtifactClient();
+
+            for (let i = 0; i < batches.length; i++) {
+              const batch = batches[i];
+              const artifactName = `manga-cbz-part-${i + 1}`;
+              const filePaths = batch.map(f => f.path);
+              const totalMB = (batch.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2);
+
+              console.log(`\nMengunggah ${artifactName} (${batch.length} file, total ${totalMB} MB)...`);
+
+              await artifactClient.uploadArtifact(
+                artifactName,
+                filePaths,
+                DOWNLOAD_DIR,
+                { retentionDays: 7 }
+              );
+              console.log(`✅ Berhasil mengunggah ${artifactName}`);
+            }
+            

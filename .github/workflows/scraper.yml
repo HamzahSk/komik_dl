@@ -7,6 +7,7 @@ on:
       - 'main.js'
       - 'scraper.js'
   workflow_dispatch:
+    # Memungkinkan kamu menjalankan workflow ini secara manual dari tab Actions di GitHub Web
 
 jobs:
   scrape-and-compress:
@@ -32,8 +33,12 @@ jobs:
       - name: Run Scraper
         run: npm start
 
-      # 5. Bagi & Upload CBZ Artifacts secara otomatis (Batas Maksimal 50MB)
-      - name: Split and Upload CBZ Artifacts
-        run: |
-          npm install @actions/artifact
-          node split_upload.js
+      # 5. Upload hasil folder manga_downloads (file .cbz) ke GitHub Artifacts
+      - name: Upload CBZ Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: manga-cbz-packages
+          # Menyesuaikan dengan target folder download kamu
+          path: manga_downloads/
+          # File zip artifact akan disimpan selama 7 hari sebelum dihapus otomatis oleh GitHub
+          retention-days: 7
