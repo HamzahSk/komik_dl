@@ -25,7 +25,8 @@ function getAllFilesRecursive(dirPath, arrayOfFiles = []) {
   return arrayOfFiles;
 }
 
-async function splitAndUpload() {
+// Tambahkan "export" agar bisa dipanggil oleh GitHub Script
+export async function splitAndUpload() {
   if (!fs.existsSync(DOWNLOAD_DIR)) {
     console.log('Folder manga_downloads tidak ditemukan.');
     return;
@@ -100,7 +101,11 @@ async function splitAndUpload() {
   }
 }
 
-splitAndUpload().catch(err => {
-  console.error('❌ Gagal membagi dan mengunggah artifact:', err);
-  process.exit(1);
-});
+// Pencegahan: Hanya jalan otomatis kalau dieksekusi lokal manual (node split_upload.js). 
+// Saat di-import oleh GitHub actions, blok ini akan diabaikan.
+if (process.argv[1] === __filename) {
+  splitAndUpload().catch(err => {
+    console.error('❌ Gagal membagi dan mengunggah artifact:', err);
+    process.exit(1);
+  });
+}
