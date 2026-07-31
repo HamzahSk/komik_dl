@@ -266,11 +266,28 @@ export async function downloadAndCompressToZip(pages, mangaTitle, chapterName, q
       const response = await fetchWithFallback(page.imageUrl, customHeaders, true);
       // fetch membalas berupa Buffer langsung dari helper jika provider-nya cgbum
       const inputBuffer = Buffer.isBuffer(response.data) ? response.data : Buffer.from(response.data);
-
+      // --- RACIKAN KHUSUS MANHWA FULL COLOR (ANTI-NGELUBER & HD) ---
       const compressedBuffer = await sharp(inputBuffer)
-        .toFormat(format, { quality: quality })
+        // 1. Resize proporsional dengan Lanczos3 untuk menjaga ketajaman resolusi asli
+        .resize({
+          kernel: sharp.kernel.lanczos3,
+          withoutEnlargement: true
+        })
+        // 2. Sharpen halus (Tidak berlebihan supaya warna nggak bergaris halo)
+        .sharpen({
+          sigma: 0.8,  // Cukup 0.7 - 0.8 untuk ilustrasi berwarna
+          m1: 1.0,     // Menjaga area gradasi warna tetap halus
+          m2: 0.5      // Menajamkan garis tepi art dan teks balok
+        })
+        // 3. Kompresi WebP khusus gambar warna / art komik
+        .webp({ 
+          quality: quality,       // Gunakan quality 75 - 80 di main.js
+          effort: 6,              // Kompresi paling efisien (hemat size)
+          smartSubsample: true,   // WAJIB: Mencegah warna luntur/ngeluber keluar garis!
+          preset: 'drawing'       // Preset terbaik untuk manhwa & webtoon 2D
+        })
         .toBuffer();
-
+        
       const pageIndexString = String(page.index + 1).padStart(3, '0');
       archive.append(compressedBuffer, { name: `${pageIndexString}.${format}` });
     } catch (err) {
