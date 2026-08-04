@@ -15,6 +15,6 @@ export const config = {
     // 'https://bbato.com/read/slug/chapter_slug'
   ], 
   mangaUrls: [
-    "https://cgbum.com/komik/honbulcgbum"
+    "https://cgbum.com/komik/jinxcgbum"
   ]
 };
